@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Bucket Run —  KFC Rewards Game</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ===================== TOP HUD ===================== -->
+<header id="hud">
+  <div class="brand">
+    <span class="brand-badge">BUCKET<br>RUN</span>
+    <span class="brand-sub"> KFC REWARDS GAME</span>
+  </div>
+
+  <div class="scores">
+    <div class="score p1">
+      <span class="label">P1</span>
+      <span id="p1Fill" class="fill">0 / 5</span>
+      <span id="p1Attempts" class="attempts">10 throws left</span>
+    </div>
+    <div class="score p2">
+      <span class="label">P2</span>
+      <span id="p2Fill" class="fill">0 / 5</span>
+      <span id="p2Attempts" class="attempts">10 throws left</span>
+    </div>
+  </div>
+
+  <button id="themeToggle" class="theme-toggle" aria-label="Toggle dark/light mode">
+    <span class="sun">☀</span><span class="moon">☾</span>
+  </button>
+</header>
+
+<!-- ===================== 3D CANVAS ===================== -->
+<div id="sceneContainer"></div>
+
+<!-- ===================== JOYSTICKS ===================== -->
+<div id="p1Rig" class="player-rig left">
+  <div class="joystick" id="p1Stick">
+    <div class="joy-base">
+      <div class="joy-pivot">
+        <div class="joy-stub"></div>
+        <div class="joy-ball"></div>
+      </div>
+    </div>
+    <div class="joy-caption">PULL &amp; RELEASE<br>TO THROW</div>
+  </div>
+</div>
+
+<div id="p2Rig" class="player-rig right">
+  <div class="joystick" id="p2Stick">
+    <div class="joy-base">
+      <div class="joy-pivot">
+        <div class="joy-stub"></div>
+        <div class="joy-ball"></div>
+      </div>
+    </div>
+    <div class="joy-caption">PULL &amp; RELEASE<br>TO THROW</div>
+  </div>
+</div>
+
+<!-- ===================== WIN MODAL ===================== -->
+<div id="winModal" class="modal hidden">
+  <div class="modal-card">
+    <p class="modal-eyebrow">BUCKET FILLED!</p>
+    <h2 id="winnerName">Player 1 Wins!</h2>
+    <p class="modal-desc">You've won a free</p>
+    <p class="voucher-item">Streetwise 2 Meal</p>
+    <p class="voucher-code" id="voucherCode">CODE: ------</p>
+    <button id="playAgainBtn" class="btn-accent">Play Again</button>
+  </div>
+</div>
+
+<div id="outOfAttemptsModal" class="modal hidden">
+  <div class="modal-card">
+    <p class="modal-eyebrow">OUT OF THROWS</p>
+    <h2>No Bucket Filled</h2>
+    <p class="modal-desc">Both players are out of attempts. Give it another go!</p>
+    <button id="tryAgainBtn" class="btn-accent">Try Again</button>
+  </div>
+</div>
+
+<div id="hint">Pull a joystick back and release to flick wings into a bucket</div>
+
+<!-- Three.js (r128, UMD build) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
