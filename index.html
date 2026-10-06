@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-<title>Bucket Run —  KFC Rewards Game</title>
+<title>Bucket Run — KFC Rewards Game</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,17 +12,19 @@
 <header id="hud">
   <div class="brand">
     <span class="brand-badge">BUCKET<br>RUN</span>
-    <span class="brand-sub"> KFC REWARDS GAME</span>
+    <span class="brand-sub">REWARDS GAME</span>
   </div>
 
   <div class="scores">
     <div class="score p1">
       <span class="label">P1</span>
+      <span id="p1Rounds" class="rounds">Rounds 0/2</span>
       <span id="p1Fill" class="fill">0 / 5</span>
       <span id="p1Attempts" class="attempts">10 throws left</span>
     </div>
     <div class="score p2">
       <span class="label">P2</span>
+      <span id="p2Rounds" class="rounds">Rounds 0/2</span>
       <span id="p2Fill" class="fill">0 / 5</span>
       <span id="p2Attempts" class="attempts">10 throws left</span>
     </div>
@@ -61,14 +63,24 @@
   </div>
 </div>
 
-<!-- ===================== WIN MODAL ===================== -->
+<!-- ===================== ROUND-WIN TOAST ===================== -->
+<div id="roundToast" class="round-toast hidden">
+  <p id="roundToastText">Round win!</p>
+</div>
+
+<!-- ===================== FINAL WIN SLIP (printed receipt) ===================== -->
 <div id="winModal" class="modal hidden">
-  <div class="modal-card">
-    <p class="modal-eyebrow">BUCKET FILLED!</p>
-    <h2 id="winnerName">Player 1 Wins!</h2>
-    <p class="modal-desc">You've won a free</p>
+  <div class="receipt-slip">
+    <p class="receipt-store">KFC REWARDS — BUCKET RUN</p>
+    <p class="receipt-dashes">- - - - - - - - - - - - - -</p>
+    <p class="receipt-you-won">YOU'VE WON!</p>
+    <h2 id="winnerName">Player 1</h2>
+    <p class="receipt-dashes">- - - - - - - - - - - - - -</p>
+    <p class="receipt-item-label">1x MEAL VOUCHER</p>
     <p class="voucher-item">Streetwise 2 Meal</p>
     <p class="voucher-code" id="voucherCode">CODE: ------</p>
+    <p class="receipt-dashes">- - - - - - - - - - - - - -</p>
+    <p class="receipt-footer">THANK YOU · ENJOY YOUR MEAL</p>
     <button id="playAgainBtn" class="btn-accent">Play Again</button>
   </div>
 </div>

@@ -100,6 +100,14 @@ html, body {
   font-size: 15px;
   font-weight: 700;
 }
+.score .rounds {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--red);
+  font-weight: 800;
+  margin-top: 2px;
+}
 .score .attempts {
   display: block;
   font-size: 9px;
@@ -189,7 +197,30 @@ body.light .theme-toggle .moon { display: inline; }
   line-height: 1.4;
 }
 
-/* ---------- Win modal ---------- */
+/* ---------- Round-win toast (brief, between rounds) ---------- */
+.round-toast {
+  position: fixed;
+  top: 90px;
+  left: 50%;
+  z-index: 40;
+  background: var(--red);
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: 1px;
+  padding: 12px 28px;
+  border-radius: 999px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  transform: translate(-50%, -40px);
+  opacity: 0;
+  transition: transform 0.35s cubic-bezier(.34,1.56,.64,1), opacity 0.35s ease;
+  pointer-events: none;
+}
+.round-toast.show {
+  transform: translate(-50%, 0);
+  opacity: 1;
+}
+
+/* ---------- Final win modal (printed receipt look) ---------- */
 .modal {
   position: fixed;
   inset: 0;
@@ -253,6 +284,83 @@ body.light .theme-toggle .moon { display: inline; }
   cursor: pointer;
 }
 .btn-accent:hover { background: var(--red-dark); }
+
+/* printed receipt "slip" — the final match-win popup */
+@keyframes slipPrint {
+  0%   { transform: translateY(-140%) rotate(-1deg); }
+  60%  { transform: translateY(8%) rotate(0.5deg); }
+  80%  { transform: translateY(-3%) rotate(-0.3deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+.receipt-slip.animate-in {
+  animation: slipPrint 0.6s cubic-bezier(.2,.8,.3,1.2) both;
+}
+.receipt-slip {
+  background: #fdfdf6;
+  color: #111;
+  font-family: 'Courier New', monospace;
+  width: 260px;
+  padding: 22px 20px 26px;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  /* jagged "torn receipt" bottom edge */
+  clip-path: polygon(
+    0% 0%, 100% 0%, 100% 96%,
+    95% 100%, 90% 96%, 85% 100%, 80% 96%, 75% 100%, 70% 96%,
+    65% 100%, 60% 96%, 55% 100%, 50% 96%, 45% 100%, 40% 96%,
+    35% 100%, 30% 96%, 25% 100%, 20% 96%, 15% 100%, 10% 96%,
+    5% 100%, 0% 96%
+  );
+}
+.receipt-store {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.receipt-dashes {
+  margin: 10px 0;
+  font-size: 11px;
+  color: #999;
+  letter-spacing: 1px;
+}
+.receipt-you-won {
+  margin: 4px 0 0;
+  font-size: 13px;
+  letter-spacing: 3px;
+  color: var(--red);
+  font-weight: 800;
+}
+.receipt-slip h2 {
+  margin: 4px 0 0;
+  font-size: 1.6rem;
+  font-family: Arial, sans-serif;
+}
+.receipt-item-label {
+  margin: 0;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: #666;
+}
+.receipt-slip .voucher-item {
+  margin: 2px 0 10px;
+  font-size: 1.1rem;
+  font-family: Arial, sans-serif;
+  color: #111;
+}
+.receipt-slip .voucher-code {
+  background: #eee;
+  color: #111;
+}
+.receipt-footer {
+  margin: 0 0 16px;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: #999;
+}
+.receipt-slip .btn-accent {
+  font-family: Arial, sans-serif;
+}
 
 #hint {
   position: fixed;
