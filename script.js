@@ -56,7 +56,7 @@ scene.add(table);
 // ---------------------------------------------------------------
 // STEP 4: Conveyor belt (receding into the distance)
 // ---------------------------------------------------------------
-const CONVEYOR_Z = -9;
+const CONVEYOR_Z = -7;
 const beltGeo = new THREE.BoxGeometry(11, 0.3, 1.6);
 const beltMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.6, metalness: 0.2 });
 const belt = new THREE.Mesh(beltGeo, beltMat);
@@ -198,7 +198,8 @@ const p2Crate = makeCrate(2.4);
 
 const BUCKET_COUNT = 4;
 const BUCKET_FILL_TARGET = 5;
-const BUCKET_RADIUS = 0.55;
+const BUCKET_RADIUS = 0.65;
+const CATCH_WINDOW = 0.6; // how far around the belt's z-plane we keep checking for a catch
 const buckets = [];
 
 function makeBucket(startX) {
@@ -335,10 +336,18 @@ function throwChicken(owner, crate, aim) {
   scene.add(sprite);
 
   // joystick pulled BACK (positive y) + left/right (x) sets aim & power
+  //
+  // IMPORTANT: vz is intentionally close to constant (not power-scaled much).
+  // The old version tied forward speed AND height both to power, which meant
+  // low power fell to the ground before ever reaching the belt, and high
+  // power arrived while still way too high in the air to drop into a bucket
+  // — there was no power level that actually worked. Keeping forward speed
+  // steady means flight TIME to the belt is predictable, so we can tune vy
+  // (height) to reliably land at bucket-rim height no matter how hard you pull.
   const power = Math.min(aim.power, 1);
-  const vz = -(6 + power * 7);              // forward speed toward the conveyor
-  const vx = aim.x * 3.5;                   // left/right aim
-  const vy = 4.2 + power * 1.8;             // upward arc height
+  const vz = -(7.0 + power * 0.8);          // forward speed toward the conveyor (nearly constant)
+  const vx = aim.x * 4.0;                   // left/right aim
+  const vy = 6.0 + power * 0.6;             // arc height — tuned so it lands near rim height at t≈1.37s
 
   projectiles.push({
     sprite,
@@ -361,7 +370,20 @@ const winnerName = document.getElementById('winnerName');
 const voucherCode = document.getElementById('voucherCode');
 const p1FillLabel = document.getElementById('p1Fill');
 const p2FillLabel = document.getElementById('p2Fill');
+const p1RoundsLabel = document.getElementById('p1Rounds');
+const p2RoundsLabel = document.getElementById('p2Rounds');
+const roundToast = document.getElementById('roundToast');
+const roundToastText = document.getElementById('roundToastText');
 let p1Total = 0, p2Total = 0;
+
+// A player must win this many ROUNDS (bucket fills) to win the match
+const ROUNDS_TO_WIN = 2;
+let p1Rounds = 0, p2Rounds = 0;
+
+function updateRoundsHUD() {
+  p1RoundsLabel.textContent = `Rounds ${p1Rounds}/${ROUNDS_TO_WIN}`;
+  p2RoundsLabel.textContent = `Rounds ${p2Rounds}/${ROUNDS_TO_WIN}`;
+}
 
 // ---------------------------------------------------------------
 // Crunch sound — synthesized with the Web Audio API (no audio file
@@ -418,14 +440,46 @@ function randomCode() {
   return s;
 }
 
-function triggerWin(owner) {
-  gameOver = true;
-  winnerName.textContent = `${owner === 'p1' ? 'Player 1' : 'Player 2'} Wins!`;
-  voucherCode.textContent = `CODE: ${randomCode()}`;
-  winModal.classList.remove('hidden');
+// Called the moment a bucket is filled to target. This is a ROUND win —
+// it takes two of these to win the overall match (per the brief).
+function handleBucketFilled(owner) {
+  playCrunchSound();
+  gameOver = true; // briefly pause play while we show the toast / slip
+
+  if (owner === 'p1') p1Rounds++; else p2Rounds++;
+  updateRoundsHUD();
+
+  const roundsSoFar = owner === 'p1' ? p1Rounds : p2Rounds;
+  const playerLabel = owner === 'p1' ? 'Player 1' : 'Player 2';
+
+  if (roundsSoFar >= ROUNDS_TO_WIN) {
+    // MATCH WIN — show the printed voucher slip
+    showWinSlip(owner);
+  } else {
+    // ROUND WIN — quick toast, then automatically start the next round
+    roundToastText.textContent = `${playerLabel} wins Round ${roundsSoFar}! Next round starting...`;
+    roundToast.classList.remove('hidden');
+    requestAnimationFrame(() => roundToast.classList.add('show'));
+    setTimeout(() => {
+      roundToast.classList.remove('show');
+      setTimeout(() => roundToast.classList.add('hidden'), 350);
+      startNextRound();
+    }, 1700);
+  }
 }
 
-function resetRound() {
+function showWinSlip(owner) {
+  winnerName.textContent = owner === 'p1' ? 'Player 1' : 'Player 2';
+  voucherCode.textContent = `CODE: ${randomCode()}`;
+  winModal.classList.remove('hidden');
+  const slip = winModal.querySelector('.receipt-slip');
+  slip.classList.remove('animate-in');
+  void slip.offsetWidth; // force reflow so the animation can replay
+  slip.classList.add('animate-in');
+}
+
+// Clears the board/attempts for a fresh round WITHOUT resetting round wins
+function startNextRound() {
   gameOver = false;
   p1Total = 0; p2Total = 0;
   p1FillLabel.textContent = '0 / 5';
@@ -443,13 +497,20 @@ function resetRound() {
   projectiles.length = 0;
 }
 
+// Full reset: clears round wins too, used after a match is won/restarted
+function startNewMatch() {
+  p1Rounds = 0; p2Rounds = 0;
+  updateRoundsHUD();
+  startNextRound();
+}
+
 document.getElementById('playAgainBtn').addEventListener('click', () => {
   winModal.classList.add('hidden');
-  resetRound();
+  startNewMatch();
 });
 document.getElementById('tryAgainBtn').addEventListener('click', () => {
   document.getElementById('outOfAttemptsModal').classList.add('hidden');
-  resetRound();
+  startNextRound(); // out of throws just restarts the CURRENT round, not the match
 });
 
 // ---------------------------------------------------------------
@@ -482,7 +543,6 @@ function animate() {
   // integrate each active throw
   for (let i = projectiles.length - 1; i >= 0; i--) {
     const p = projectiles[i];
-    const prevZ = p.sprite.position.z;
 
     p.vel.y -= GRAVITY * dt;
     p.sprite.position.x += p.vel.x * dt;
@@ -492,15 +552,19 @@ function animate() {
 
     let remove = false;
 
-    // crossed the conveyor plane this frame -> check for a catch
-    if (prevZ > CONVEYOR_Z && p.sprite.position.z <= CONVEYOR_Z) {
+    // Check for a catch across a WINDOW around the belt's z-plane, not just
+    // the single exact frame it crosses — at high frame rates/variable dt a
+    // one-frame check can skip right over the belt and always miss, even
+    // when the throw was otherwise lined up correctly.
+    if (p.sprite.position.z <= CONVEYOR_Z + CATCH_WINDOW) {
       const landedY = p.sprite.position.y;
       let caught = null;
-      for (const b of buckets) {
-        if (Math.abs(p.sprite.position.x - b.position.x) < BUCKET_RADIUS &&
-            landedY > 0.2 && landedY < 1.3) {
-          caught = b;
-          break;
+      if (landedY > 0.1 && landedY < 1.6) {
+        for (const b of buckets) {
+          if (Math.abs(p.sprite.position.x - b.position.x) < BUCKET_RADIUS) {
+            caught = b;
+            break;
+          }
         }
       }
       if (caught) {
@@ -515,15 +579,16 @@ function animate() {
         setTimeout(() => caught.scale.set(1, 1, 1), 150);
 
         if (caught.userData.fill >= BUCKET_FILL_TARGET) {
-          playCrunchSound();
-          triggerWin(p.owner);
+          handleBucketFilled(p.owner);
         }
+        remove = true;
+      } else if (p.sprite.position.z < CONVEYOR_Z - CATCH_WINDOW) {
+        remove = true; // passed all the way through the window without a catch — miss
       }
-      remove = true; // piece lands/bounces off the belt either way
     }
 
-    // fell below the table or flew too far = miss, clean it up
-    if (p.sprite.position.y < -1 || p.sprite.position.z < CONVEYOR_Z - 3) {
+    // fell below the table = miss, clean it up
+    if (p.sprite.position.y < -1.5) {
       remove = true;
     }
 
